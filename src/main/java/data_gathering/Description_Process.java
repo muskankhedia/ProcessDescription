@@ -9,28 +9,52 @@ import org.jsoup.select.Elements;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Description_Process {
 
 
-    private String searchProcess(String searchURL)  {
+    private LinkedHashMap<String, String> searchProcess(String searchURL)  {
 
         try {
             Document doc = Jsoup.connect(searchURL).userAgent("Mozilla/5.0").get();
             String text = doc.toString();
+//            System.out.println("text:: "+ text);
+            LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
             String subStr = "";
-            String str1 = "<h2>Description</h2>";
-            String str2 = "<h2>";
-            int lastIndex = text.indexOf(str1) + str1.length() + 1;
-            if (text.indexOf(str1) >= 1) {
-                subStr = text.substring(lastIndex);
-                int firstIndex = subStr.indexOf(str2);
-                if (firstIndex > 1){
-                    subStr = subStr.substring(0,firstIndex);
+            String subStr2 = "";
+            for (int i = 0; i < text.length(); ++i ) {
+                String str1 = "<h2>";
+                String str2 = "</h2>";
+                int index1 = text.indexOf(str1) + str1.length() ;
+                int index2 = text.indexOf(str2) + str2.length() + 1;
+                String heading = text.substring(index1, text.indexOf(str2));
+                System.out.println("heading:: "+ heading);
+                int firstIndex = 0;
+                if (text.indexOf(str2) >= 0) {
+                    subStr = text.substring(index2);
+                    firstIndex = subStr.indexOf(str1);
+                    if (firstIndex > 0){
+                        i = 0;
+                        text = subStr;
+                        subStr2 = subStr.substring(0,firstIndex);
+                    } else {
+                        subStr2 = subStr;
+                        String desc =  Jsoup.parse(subStr2).text();
+                        System.out.println("desc:: "+ desc);
+                        result.put(heading,desc);
+                        break;
+                    }
                 }
+                String desc =  Jsoup.parse(subStr2).text();
+                System.out.println("desc:: "+ desc);
+                result.put(heading,desc);
             }
 
-            String result =  Jsoup.parse(subStr).text();
+            System.out.println(result);
             return result;
         }
         catch (Exception e) {
@@ -42,7 +66,7 @@ public class Description_Process {
 
         JSONArray processList = new JSONArray();
         char initialLetter = '0';
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 1; i++) {
 
             String baseURL = "https://linux.die.net/man/";
 
@@ -67,18 +91,29 @@ public class Description_Process {
                         JSONObject processObject = new JSONObject();
                         String searchURL = baseURL + "/" + processName;
                         System.out.println("searchURL:: " + searchURL);
-                        String data = searchProcess(searchURL);
+                        LinkedHashMap<String, String> data = searchProcess(searchURL);
                         System.out.println("processname: " + processName);
                         System.out.println("data: " + data);
                         processData.put("Process Name", processName);
                         processData.put("Link", searchURL);
-                        processData.put("Description", data);
+                        for (Map.Entry<String, String> entry : data.entrySet()) {
+                            String heading = entry.getKey();
+                            String desc = entry.getValue();
+                            processData.put(heading, desc);
+                        }
                         processObject.put("Process", processData);
                         processList.add(processObject);
+                        String fileName  = "processdesc" + i + initialLetter + ".json";
+                            FileWriter file = new FileWriter(fileName);
+//                            initialLetter += 1 ;
+                            file.write(processList.toJSONString());
+                            file.flush();
+                        break;
                     } else {
                         //Write JSON file
                         String fileName  = "processdesc" + i + initialLetter + ".json";
-                        try (FileWriter file = new FileWriter(fileName)) {
+                        try  {
+                            FileWriter file = new FileWriter(fileName);
 //                            initialLetter += 1 ;
                             file.write(processList.toJSONString());
                             file.flush();
@@ -91,12 +126,16 @@ public class Description_Process {
                                 JSONObject processObject = new JSONObject();
                                 String searchURL = baseURL + "/" + processName;
                                 System.out.println("searchURL:: " + searchURL);
-                                String data = searchProcess(searchURL);
+                                LinkedHashMap<String, String> data = searchProcess(searchURL);
                                 System.out.println("processname: " + processName);
                                 System.out.println("data: " + data);
                                 processData.put("Process Name", processName);
                                 processData.put("Link", searchURL);
-                                processData.put("Description", data);
+                                for (Map.Entry<String, String> entry : data.entrySet()) {
+                                    String heading = entry.getKey();
+                                    String desc = entry.getValue();
+                                    processData.put(heading, desc);
+                                }
                                 processObject.put("Process", processData);
                                 processList.add(processObject);
                             }
@@ -114,6 +153,7 @@ public class Description_Process {
     public static void main(String[] args) throws IOException {
         Description_Process p = new Description_Process();
 //        System.out.println(p.searchProcess("https://linux.die.net/man/1/cheatmake"));
+//        p.searchProcess("https://linux.die.net/man/1/cheatmake");
         p.iterateAllLinks();
     }
 
