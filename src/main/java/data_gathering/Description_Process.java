@@ -32,7 +32,7 @@ public class Description_Process {
                 int index1 = text.indexOf(str1) + str1.length() ;
                 int index2 = text.indexOf(str2) + str2.length() + 1;
                 String heading = text.substring(index1, text.indexOf(str2));
-                System.out.println("heading:: "+ heading);
+//                System.out.println("heading:: "+ heading);
                 int firstIndex = 0;
                 if (text.indexOf(str2) >= 0) {
                     subStr = text.substring(index2);
@@ -44,17 +44,17 @@ public class Description_Process {
                     } else {
                         subStr2 = subStr;
                         String desc =  Jsoup.parse(subStr2).text();
-                        System.out.println("desc:: "+ desc);
+//                        System.out.println("desc:: "+ desc);
                         result.put(heading,desc);
                         break;
                     }
                 }
                 String desc =  Jsoup.parse(subStr2).text();
-                System.out.println("desc:: "+ desc);
+//                System.out.println("desc:: "+ desc);
                 result.put(heading,desc);
             }
 
-            System.out.println(result);
+//            System.out.println(result);
             return result;
         }
         catch (Exception e) {
@@ -96,19 +96,17 @@ public class Description_Process {
                         System.out.println("data: " + data);
                         processData.put("Process Name", processName);
                         processData.put("Link", searchURL);
-                        for (Map.Entry<String, String> entry : data.entrySet()) {
-                            String heading = entry.getKey();
-                            String desc = entry.getValue();
-                            processData.put(heading, desc);
+                        try {
+                            for (Map.Entry<String, String> entry : data.entrySet()) {
+                                String heading = entry.getKey();
+                                String desc = entry.getValue();
+                                processData.put(heading, desc);
+                            }
+                            processObject.put("Process", processData);
+                            processList.add(processObject);
+                        } catch (Exception e){
+                            System.out.println("Error");
                         }
-                        processObject.put("Process", processData);
-                        processList.add(processObject);
-                        String fileName  = "processdesc" + i + initialLetter + ".json";
-                            FileWriter file = new FileWriter(fileName);
-//                            initialLetter += 1 ;
-                            file.write(processList.toJSONString());
-                            file.flush();
-                        break;
                     } else {
                         //Write JSON file
                         String fileName  = "processdesc" + i + initialLetter + ".json";
