@@ -66,7 +66,7 @@ public class Description_Process {
 
         JSONArray processList = new JSONArray();
         char initialLetter = '0';
-        for (int i = 1; i <= 1; i++) {
+        for (int i = 1; i <= 10; i++) {
 
             String baseURL = "https://linux.die.net/man/";
 
