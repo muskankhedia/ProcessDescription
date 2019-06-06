@@ -14,6 +14,7 @@ import java.util.Map;
 
 public class Description_Process {
 
+    int j = 1;
     private LinkedHashMap<String, String> searchProcess(String searchURL)  {
 
         try {
@@ -62,6 +63,7 @@ public class Description_Process {
 
         JSONArray processList = new JSONArray();
         for (int i = 1; i <= 10; i++) {
+            j = 1;
             String baseURL = "https://linux.die.net/man/";
 
             if (i < 9) {
@@ -131,7 +133,8 @@ public class Description_Process {
                 String desc = entry.getValue();
                 processData.put(heading, desc);
             }
-            processObject.put("Process", processData);
+            processObject.put(j, processData);
+            j++;
             return processObject;
         } catch (Exception e){
             return null;
