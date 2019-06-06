@@ -9,13 +9,10 @@ import org.jsoup.select.Elements;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Description_Process {
-
 
     private LinkedHashMap<String, String> searchProcess(String searchURL)  {
 
@@ -66,10 +63,8 @@ public class Description_Process {
 
         JSONArray processList = new JSONArray();
         char initialLetter = '0';
+        String baseURL = "https://linux.die.net/man/";
         for (int i = 1; i <= 10; i++) {
-
-            String baseURL = "https://linux.die.net/man/";
-
             if (i < 9) {
                 baseURL = baseURL + i;
             } else if (i == 9) {
@@ -77,7 +72,6 @@ public class Description_Process {
             } else {
                 baseURL = baseURL + "n";
             }
-
             System.out.println("baseURL: " + baseURL);
             Document doc = Jsoup.connect(baseURL).userAgent("Mozilla/5.0").get();
             Elements results = doc.select("dl > dt");
@@ -87,58 +81,22 @@ public class Description_Process {
                 String processName = link.text();
                 if (!processName.equals("")) {
                     if (processName.charAt(0) == initialLetter) {
-                        JSONObject processData = new JSONObject();
-                        JSONObject processObject = new JSONObject();
                         String searchURL = baseURL + "/" + processName;
-                        System.out.println("searchURL:: " + searchURL);
-                        LinkedHashMap<String, String> data = searchProcess(searchURL);
-                        System.out.println("processname: " + processName);
-                        System.out.println("data: " + data);
-                        processData.put("Process Name", processName);
-                        processData.put("Link", searchURL);
-                        try {
-                            for (Map.Entry<String, String> entry : data.entrySet()) {
-                                String heading = entry.getKey();
-                                String desc = entry.getValue();
-                                processData.put(heading, desc);
-                            }
-                            processObject.put("Process", processData);
-                            processList.add(processObject);
-                        } catch (Exception e){
-                            System.out.println("Error");
-                        }
+                        JSONObject processObject = storeData(searchURL, processName);
+                        processList.add(processObject);
+
                     } else {
                         //Write JSON file
                         String fileName  = "processdesc" + i + initialLetter + ".json";
-                        try  {
-                            FileWriter file = new FileWriter(fileName);
-//                            initialLetter += 1 ;
-                            file.write(processList.toJSONString());
-                            file.flush();
-                            processList = new JSONArray();
-                            while (!(initialLetter == processName.charAt(0))) {
-                                initialLetter += 1;
-                            }
-                            if (processName.charAt(0) == initialLetter){
-                                JSONObject processData = new JSONObject();
-                                JSONObject processObject = new JSONObject();
-                                String searchURL = baseURL + "/" + processName;
-                                System.out.println("searchURL:: " + searchURL);
-                                LinkedHashMap<String, String> data = searchProcess(searchURL);
-                                System.out.println("processname: " + processName);
-                                System.out.println("data: " + data);
-                                processData.put("Process Name", processName);
-                                processData.put("Link", searchURL);
-                                for (Map.Entry<String, String> entry : data.entrySet()) {
-                                    String heading = entry.getKey();
-                                    String desc = entry.getValue();
-                                    processData.put(heading, desc);
-                                }
-                                processObject.put("Process", processData);
-                                processList.add(processObject);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        saveData(fileName, processList);
+                        processList = new JSONArray();
+                        while (!(initialLetter == processName.charAt(0))) {
+                            initialLetter += 1;
+                        }
+                        if (processName.charAt(0) == initialLetter){
+                            String searchURL = baseURL + "/" + processName;
+                            JSONObject processObject = storeData(searchURL, processName);
+                            processList.add(processObject);
                         }
                     }
                 }
@@ -146,6 +104,38 @@ public class Description_Process {
         }
     }
 
+    public JSONObject storeData (String url, String processName) {
+        JSONObject processData = new JSONObject();
+        JSONObject processObject = new JSONObject();
+        System.out.println("searchURL:: " + url);
+        LinkedHashMap<String, String> data = searchProcess(url);
+        System.out.println("processname: " + processName);
+        System.out.println("data: " + data);
+        processData.put("Process Name", processName);
+        processData.put("Link", url);
+        try {
+            for (Map.Entry<String, String> entry : data.entrySet()) {
+                String heading = entry.getKey();
+                String desc = entry.getValue();
+                processData.put(heading, desc);
+            }
+            processObject.put("Process", processData);
+            return processObject;
+        } catch (Exception e){
+            return null;
+        }
+    }
+
+    public void saveData(String fileName, JSONArray processList) {
+        try  {
+            FileWriter file = new FileWriter(fileName);
+//                            initialLetter += 1 ;
+            file.write(processList.toJSONString());
+            file.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public static void main(String[] args) throws IOException {
