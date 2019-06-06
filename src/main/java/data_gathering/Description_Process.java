@@ -50,7 +50,6 @@ public class Description_Process {
 //                System.out.println("desc:: "+ desc);
                 result.put(heading,desc);
             }
-
 //            System.out.println(result);
             return result;
         }
@@ -62,9 +61,9 @@ public class Description_Process {
     private void iterateAllLinks() throws IOException {
 
         JSONArray processList = new JSONArray();
-        char initialLetter = '0';
-        String baseURL = "https://linux.die.net/man/";
         for (int i = 1; i <= 10; i++) {
+            String baseURL = "https://linux.die.net/man/";
+
             if (i < 9) {
                 baseURL = baseURL + i;
             } else if (i == 9) {
@@ -72,23 +71,34 @@ public class Description_Process {
             } else {
                 baseURL = baseURL + "n";
             }
+
             System.out.println("baseURL: " + baseURL);
             Document doc = Jsoup.connect(baseURL).userAgent("Mozilla/5.0").get();
             Elements results = doc.select("dl > dt");
+            iterateElements(baseURL, results, i);
+        }
+    }
 
-            for (Element result : results) {
-                Elements link = result.getElementsByTag("a");
-                String processName = link.text();
-                if (!processName.equals("")) {
-                    if (processName.charAt(0) == initialLetter) {
-                        String searchURL = baseURL + "/" + processName;
-                        JSONObject processObject = storeData(searchURL, processName);
-                        processList.add(processObject);
+    public void iterateElements (String baseURL, Elements results, int i) {
+        char initialLetter = '0';
+        JSONArray processList = new JSONArray();
+        for (Element result : results) {
+            Elements link = result.getElementsByTag("a");
+            String processName = link.text();
+            if (!processName.equals("")) {
+                if (processName.charAt(0) == initialLetter) {
+                    String searchURL = baseURL + "/" + processName;
+                    JSONObject processObject = storeData(searchURL, processName);
+                    processList.add(processObject);
 
-                    } else {
-                        //Write JSON file
-                        String fileName  = "processdesc" + i + initialLetter + ".json";
-                        saveData(fileName, processList);
+                } else {
+                    //Write JSON file
+                    String fileName  = "processdesc" + i + initialLetter + ".json";
+                    try  {
+                        FileWriter file = new FileWriter(fileName);
+//                            initialLetter += 1 ;
+                        file.write(processList.toJSONString());
+                        file.flush();
                         processList = new JSONArray();
                         while (!(initialLetter == processName.charAt(0))) {
                             initialLetter += 1;
@@ -98,6 +108,8 @@ public class Description_Process {
                             JSONObject processObject = storeData(searchURL, processName);
                             processList.add(processObject);
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -125,18 +137,6 @@ public class Description_Process {
             return null;
         }
     }
-
-    public void saveData(String fileName, JSONArray processList) {
-        try  {
-            FileWriter file = new FileWriter(fileName);
-//                            initialLetter += 1 ;
-            file.write(processList.toJSONString());
-            file.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     public static void main(String[] args) throws IOException {
         Description_Process p = new Description_Process();
